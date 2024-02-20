@@ -196,9 +196,14 @@ def get_next_click3D_torch_ritm(prev_seg, gt_semantic_seg):
     to_point_mask = to_point_mask[None, None]
     # import pdb; pdb.set_trace()
 
+    n_b, n_c, n_x, n_y, n_z = to_point_mask.shape
+
     for i in range(gt_semantic_seg.shape[0]):
         points = torch.argwhere(to_point_mask[i])
-        point = points[np.random.randint(len(points))]
+        if len(points) == 0:
+            point = torch.tensor([1, n_x // 2, n_y // 2, n_z // 2], dtype=torch.int32)
+        else:
+            point = points[np.random.randint(len(points))]
         if fn_masks[i, 0, point[1], point[2], point[3]]:
             is_positive = True
         else:
@@ -231,9 +236,20 @@ def get_next_click3D_torch_2(prev_seg, gt_semantic_seg):
 
     to_point_mask = torch.logical_or(fn_masks, fp_masks)
 
+    default_point = [0, 0, 0]
+    default_bp = torch.Tensor(default_point).to(gt_semantic_seg.device).reshape(1, 1, 3)
+    is_positive = False
+    default_bl = torch.tensor([int(is_positive),]).to(gt_semantic_seg.device).reshape(1, 1)
     for i in range(gt_semantic_seg.shape[0]):
-
         points = torch.argwhere(to_point_mask[i])
+        if len(points) == 0:
+            bp = default_bp.clone()
+            bl = default_bl.clone()
+
+            batch_points.append(bp)
+            batch_labels.append(bl)
+            continue
+
         point = points[np.random.randint(len(points))]
         # import pdb; pdb.set_trace()
         if fn_masks[i, 0, point[1], point[2], point[3]]:
