@@ -69,7 +69,6 @@ class ImageEncoderViT(nn.Module):
                 torch.zeros(1, img_size // patch_size, img_size // patch_size, embed_dim)
             )
 
-
         self.blocks = nn.ModuleList()
         for i in range(depth):
             block = Block(
@@ -111,7 +110,6 @@ class ImageEncoderViT(nn.Module):
 
         for blk in self.blocks:
             x = blk(x)
-
 
         x = self.neck(x.permute(0, 3, 1, 2))
 
@@ -353,10 +351,6 @@ def add_decomposed_rel_pos(
 
     B, _, dim = q.shape
     r_q = q.reshape(B, q_h, q_w, dim)
-
-    # r_q = r_q.to(torch.float) #todo   opt_level="O2" 模式下需要注释
-    r_q = r_q.to(Rh.dtype) #todo
-    
     rel_h = torch.einsum("bhwc,hkc->bhwk", r_q, Rh)
     rel_w = torch.einsum("bhwc,wkc->bhwk", r_q, Rw)
 
@@ -386,7 +380,7 @@ class PatchEmbed(nn.Module):
             stride (Tuple): stride of the projection layer.
             padding (Tuple): padding size of the projection layer.
             in_chans (int): Number of input image channels.
-            embed_dim (int):  embed_dim (int): Patch embedding dimension.
+            embed_dim (int): Patch embedding dimension.
         """
         super().__init__()
 

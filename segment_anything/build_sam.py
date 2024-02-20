@@ -5,44 +5,42 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
+
 from functools import partial
+
 from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer
 from torch.nn import functional as F
 
-def build_sam_vit_h(args):
+def build_sam_vit_h(checkpoint=None):
     return _build_sam(
         encoder_embed_dim=1280,
         encoder_depth=32,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[7, 15, 23, 31],
-        image_size=args.image_size,
-        checkpoint=args.sam_checkpoint,
+        checkpoint=checkpoint,
     )
 
 
 build_sam = build_sam_vit_h
 
 
-def build_sam_vit_l(args):
+def build_sam_vit_l(checkpoint=None):
     return _build_sam(
         encoder_embed_dim=1024,
         encoder_depth=24,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[5, 11, 17, 23],
-        image_size=args.image_size,
-        checkpoint=args.sam_checkpoint,
+        checkpoint=checkpoint,
     )
 
 
-def build_sam_vit_b(args):
+def build_sam_vit_b(checkpoint=None):
     return _build_sam(
         encoder_embed_dim=768,
         encoder_depth=12,
         encoder_num_heads=12,
         encoder_global_attn_indexes=[2, 5, 8, 11],
-        image_size=args.image_size,
-        checkpoint=args.sam_checkpoint,
-
+        checkpoint=checkpoint,
     )
 
 
@@ -59,11 +57,10 @@ def _build_sam(
     encoder_depth,
     encoder_num_heads,
     encoder_global_attn_indexes,
-    image_size,
-    checkpoint,
+    checkpoint=None,
 ):
     prompt_embed_dim = 256
-    image_size = image_size
+    image_size = 1024
     vit_patch_size = 16
     image_embedding_size = image_size // vit_patch_size
     sam = Sam(
@@ -76,7 +73,7 @@ def _build_sam(
             num_heads=encoder_num_heads,
             patch_size=vit_patch_size,
             qkv_bias=True,
-            use_rel_pos = True,
+            use_rel_pos=True,
             global_attn_indexes=encoder_global_attn_indexes,
             window_size=14,
             out_chans=prompt_embed_dim,
@@ -102,7 +99,7 @@ def _build_sam(
         pixel_mean=[123.675, 116.28, 103.53],
         pixel_std=[58.395, 57.12, 57.375],
     )
-    sam.train()
+    sam.eval()
     if checkpoint is not None:
         with open(checkpoint, "rb") as f:
             state_dict = torch.load(f)
@@ -113,10 +110,10 @@ def _build_sam(
                 sam.load_state_dict(state_dict)
         except:
             print('*******interpolate')
-            new_state_dict = load_from(sam, state_dict, image_size, vit_patch_size)   
+            new_state_dict = load_from(sam, state_dict, image_size, vit_patch_size)
             sam.load_state_dict(new_state_dict)
         print(f"*******load {checkpoint}")
-        
+
     return sam
 
 
@@ -135,16 +132,16 @@ def load_from(sam, state_dicts, image_size, vit_patch_size):
         new_state_dict['image_encoder.pos_embed'] = pos_embed
         rel_pos_keys = [k for k in sam_dict.keys() if 'rel_pos' in k]
 
-        global_rel_pos_keys = [k for k in rel_pos_keys if 
-                                                        '2' in k or 
-                                                        '5' in k or 
-                                                        '7' in k or 
-                                                        '8' in k or 
-                                                        '11' in k or 
+        global_rel_pos_keys = [k for k in rel_pos_keys if
+                                                        '2' in k or
+                                                        '5' in k or
+                                                        '7' in k or
+                                                        '8' in k or
+                                                        '11' in k or
                                                         '13' in k or
-                                                        '15' in k or 
-                                                        '23' in k or 
-                                                        '31' in k] 
+                                                        '15' in k or
+                                                        '23' in k or
+                                                        '31' in k]
         # print(sam_dict)
         for k in global_rel_pos_keys:
             h_check, w_check = sam_dict[k].shape
@@ -158,4 +155,3 @@ def load_from(sam, state_dicts, image_size, vit_patch_size):
 
     sam_dict.update(new_state_dict)
     return sam_dict
-
