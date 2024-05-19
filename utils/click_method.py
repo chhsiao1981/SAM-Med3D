@@ -111,11 +111,15 @@ def get_next_click3D_torch_2(prev_seg, gt_semantic_seg):
 
     to_point_mask = torch.logical_or(fn_masks, fp_masks)
 
+    n_b, n_c, n_x, n_y, n_z = gt_semantic_seg.shape
     default_bp = torch.tensor([0, 0, 0], dtype=torch.int32).to(gt_semantic_seg.device).reshape(1, 1, 3)
 
-    for i in range(gt_semantic_seg.shape[0]):
+    for i in range(n_b):
         points = torch.argwhere(to_point_mask[i])
         if len(points) == 0:
+            if n_b == 1:
+                break
+
             bp = default_bp.clone()
             if gt_semantic_seg[i, 0, 0, 0, 0]:
                 is_positive = True
@@ -169,10 +173,10 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
     fn_masks = torch.logical_and(true_masks, torch.logical_not(pred_masks))
     fp_masks = torch.logical_and(torch.logical_not(true_masks), pred_masks)
 
-    # n_b, n_c, n_x, n_y, n_z = gt_semantic_seg.shape
+    n_b, n_c, n_x, n_y, n_z = gt_semantic_seg.shape
     default_point = torch.tensor([1, 0, 0, 0], dtype=torch.int32).to(gt_semantic_seg.device).reshape(1, 1, 3)
 
-    for i in range(gt_semantic_seg.shape[0]):
+    for i in range(n_b):
 
         fn_points = torch.argwhere(fn_masks[i])
         fp_points = torch.argwhere(fp_masks[i])
@@ -190,6 +194,9 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
             point = fp_points[np.random.randint(len(fp_points))]
             is_positive = False
         else:
+            if n_b == 1:
+                break
+
             point = default_point
             if gt_semantic_seg[i, 0, 0, 0, 0]:
                 is_positive = True
