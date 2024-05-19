@@ -150,8 +150,9 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
         mask_gt = (mask_gt > 0)
 
         volume_sum = mask_gt.sum() + mask_pred.sum()
+        # mask all 0 and no pred.
         if volume_sum == 0:
-            return np.NaN
+            return 1
         volume_intersect = (mask_gt & mask_pred).sum()
         return 2 * volume_intersect / volume_sum
 
