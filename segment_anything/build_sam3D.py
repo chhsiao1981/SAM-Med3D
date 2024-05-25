@@ -10,30 +10,33 @@ from functools import partial
 
 from .modeling import ImageEncoderViT3D, MaskDecoder3D, PromptEncoder3D, Sam3D
 
-def build_sam3D_vit_h(checkpoint=None):
+
+def build_sam3D_vit_h(checkpoint=None, in_chans=1):
     return _build_sam3D(
         encoder_embed_dim=1280,
         encoder_depth=32,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[7, 15, 23, 31],
         checkpoint=checkpoint,
+        in_chans=in_chans,
     )
 
 
 build_sam3D = build_sam3D_vit_h
 
 
-def build_sam3D_vit_l(checkpoint=None):
+def build_sam3D_vit_l(checkpoint=None, in_chans=1):
     return _build_sam3D(
         encoder_embed_dim=1024,
         encoder_depth=24,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[5, 11, 17, 23],
         checkpoint=checkpoint,
+        in_chans=in_chans,
     )
 
 
-def build_sam3D_vit_b(checkpoint=None):
+def build_sam3D_vit_b(checkpoint=None, in_chans=1):
     return _build_sam3D(
         # encoder_embed_dim=768,
         encoder_embed_dim=384,
@@ -41,15 +44,18 @@ def build_sam3D_vit_b(checkpoint=None):
         encoder_num_heads=12,
         encoder_global_attn_indexes=[2, 5, 8, 11],
         checkpoint=checkpoint,
+        in_chans=in_chans,
     )
 
-def build_sam3D_vit_b_ori(checkpoint=None):
+
+def build_sam3D_vit_b_ori(checkpoint=None, in_chans=1):
     return _build_sam3D_ori(
         encoder_embed_dim=768,
         encoder_depth=12,
         encoder_num_heads=12,
         encoder_global_attn_indexes=[2, 5, 8, 11],
         checkpoint=checkpoint,
+        in_chans=in_chans,
     )
 
 
@@ -62,13 +68,13 @@ sam_model_registry3D = {
 }
 
 
-
 def _build_sam3D(
     encoder_embed_dim,
     encoder_depth,
     encoder_num_heads,
     encoder_global_attn_indexes,
     checkpoint=None,
+    in_chans: int = 1,
 ):
     prompt_embed_dim = 384
     image_size = 256
@@ -88,6 +94,7 @@ def _build_sam3D(
             global_attn_indexes=encoder_global_attn_indexes,
             window_size=14,
             out_chans=prompt_embed_dim,
+            in_chans=in_chans,
         ),
         prompt_encoder=PromptEncoder3D(
             embed_dim=prompt_embed_dim,
@@ -118,6 +125,7 @@ def _build_sam3D_ori(
     encoder_num_heads,
     encoder_global_attn_indexes,
     checkpoint=None,
+    in_chans: int = 1,
 ):
     prompt_embed_dim = 384
     image_size = 128
@@ -137,6 +145,7 @@ def _build_sam3D_ori(
             global_attn_indexes=encoder_global_attn_indexes,
             window_size=14,
             out_chans=prompt_embed_dim,
+            in_chans=in_chans,
         ),
         prompt_encoder=PromptEncoder3D(
             embed_dim=prompt_embed_dim,
