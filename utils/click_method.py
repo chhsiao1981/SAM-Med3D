@@ -196,14 +196,9 @@ def get_next_click3D_torch_ritm(prev_seg, gt_semantic_seg):
     to_point_mask = to_point_mask[None, None]
     # import pdb; pdb.set_trace()
 
-    n_b, n_c, n_x, n_y, n_z = to_point_mask.shape
-
     for i in range(gt_semantic_seg.shape[0]):
         points = torch.argwhere(to_point_mask[i])
-        if len(points) == 0:
-            point = torch.tensor([1, n_x // 2, n_y // 2, n_z // 2], dtype=torch.int32)
-        else:
-            point = points[np.random.randint(len(points))]
+        point = points[np.random.randint(len(points))]
         if fn_masks[i, 0, point[1], point[2], point[3]]:
             is_positive = True
         else:
@@ -236,26 +231,9 @@ def get_next_click3D_torch_2(prev_seg, gt_semantic_seg):
 
     to_point_mask = torch.logical_or(fn_masks, fp_masks)
 
-    n_b, n_c, n_x, n_y, n_z = gt_semantic_seg.shape
-    default_bp = torch.tensor([0, 0, 0], dtype=torch.int32).to(gt_semantic_seg.device).reshape(1, 1, 3)
+    for i in range(gt_semantic_seg.shape[0]):
 
-    for i in range(n_b):
         points = torch.argwhere(to_point_mask[i])
-        if len(points) == 0:
-            if n_b == 1:
-                break
-
-            bp = default_bp.clone()
-            if gt_semantic_seg[i, 0, 0, 0, 0]:
-                is_positive = True
-            else:
-                is_positive = False
-            bl = torch.tensor([int(is_positive),]).to(gt_semantic_seg.device).reshape(1, 1)
-
-            batch_points.append(bp)
-            batch_labels.append(bl)
-            continue
-
         point = points[np.random.randint(len(points))]
         # import pdb; pdb.set_trace()
         if fn_masks[i, 0, point[1], point[2], point[3]]:
@@ -285,9 +263,8 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
         mask_gt = mask_gt > 0
 
         volume_sum = mask_gt.sum() + mask_pred.sum()
-        # mask all 0 and no pred.
         if volume_sum == 0:
-            return 1
+            return np.NaN
         volume_intersect = (mask_gt & mask_pred).sum()
         return 2 * volume_intersect / volume_sum
 
@@ -302,10 +279,7 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
     fn_masks = torch.logical_and(true_masks, torch.logical_not(pred_masks))
     fp_masks = torch.logical_and(torch.logical_not(true_masks), pred_masks)
 
-    n_b, n_c, n_x, n_y, n_z = gt_semantic_seg.shape
-    default_point = torch.tensor([1, 0, 0, 0], dtype=torch.int32).to(gt_semantic_seg.device).reshape(1, 1, 3)
-
-    for i in range(n_b):
+    for i in range(gt_semantic_seg.shape[0]):
 
         fn_points = torch.argwhere(fn_masks[i])
         fp_points = torch.argwhere(fp_masks[i])
@@ -322,15 +296,6 @@ def get_next_click3D_torch_with_dice(prev_seg, gt_semantic_seg):
         elif len(fp_points) > 0:
             point = fp_points[np.random.randint(len(fp_points))]
             is_positive = False
-        else:
-            if n_b == 1:
-                break
-
-            point = default_point
-            if gt_semantic_seg[i, 0, 0, 0, 0]:
-                is_positive = True
-            else:
-                is_positive = False
         # bp = torch.tensor(point[1:]).reshape(1,1,3)
         bp = point[1:].clone().detach().reshape(1, 1, 3)
         bl = torch.tensor(

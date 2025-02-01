@@ -5,42 +5,44 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
-
 from functools import partial
-
 from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer
 from torch.nn import functional as F
 
-def build_sam_vit_h(checkpoint=None):
+def build_sam_vit_h(args):
     return _build_sam(
         encoder_embed_dim=1280,
         encoder_depth=32,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[7, 15, 23, 31],
-        checkpoint=checkpoint,
+        image_size=args.image_size,
+        checkpoint=args.sam_checkpoint,
     )
 
 
 build_sam = build_sam_vit_h
 
 
-def build_sam_vit_l(checkpoint=None):
+def build_sam_vit_l(args):
     return _build_sam(
         encoder_embed_dim=1024,
         encoder_depth=24,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[5, 11, 17, 23],
-        checkpoint=checkpoint,
+        image_size=args.image_size,
+        checkpoint=args.sam_checkpoint,
     )
 
 
-def build_sam_vit_b(checkpoint=None):
+def build_sam_vit_b(args):
     return _build_sam(
         encoder_embed_dim=768,
         encoder_depth=12,
         encoder_num_heads=12,
         encoder_global_attn_indexes=[2, 5, 8, 11],
-        checkpoint=checkpoint,
+        image_size=args.image_size,
+        checkpoint=args.sam_checkpoint,
+
     )
 
 
@@ -57,10 +59,11 @@ def _build_sam(
     encoder_depth,
     encoder_num_heads,
     encoder_global_attn_indexes,
-    checkpoint=None,
+    image_size,
+    checkpoint,
 ):
     prompt_embed_dim = 256
-    image_size = 1024
+    image_size = image_size
     vit_patch_size = 16
     image_embedding_size = image_size // vit_patch_size
     sam = Sam(
@@ -73,7 +76,7 @@ def _build_sam(
             num_heads=encoder_num_heads,
             patch_size=vit_patch_size,
             qkv_bias=True,
-            use_rel_pos=True,
+            use_rel_pos = True,
             global_attn_indexes=encoder_global_attn_indexes,
             window_size=14,
             out_chans=prompt_embed_dim,
@@ -99,7 +102,7 @@ def _build_sam(
         pixel_mean=[123.675, 116.28, 103.53],
         pixel_std=[58.395, 57.12, 57.375],
     )
-    sam.eval()
+    sam.train()
     if checkpoint is not None:
         with open(checkpoint, "rb") as f:
             state_dict = torch.load(f)
@@ -155,3 +158,4 @@ def load_from(sam, state_dicts, image_size, vit_patch_size):
 
     sam_dict.update(new_state_dict)
     return sam_dict
+
