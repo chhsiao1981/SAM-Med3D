@@ -1,0 +1,51 @@
+[build-system]
+requires = [
+    'setuptools',
+]
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'sam-med3d'
+version = '0.0.1'
+dependencies = [
+]
+authors = [
+    # {name = '', email = ''},
+]
+description = ''
+readme = 'readme.md'
+license = {file = 'LICENSE'}
+keywords = [
+]
+classifiers = [
+    'Programming Language :: Python :: 3',
+    'Operating System :: OS Independent',
+]
+
+[project.urls]
+# Homepage      = ''
+# Documentation = ''
+# Repository    = ''
+# 'Bug Tracker' = ''
+# Changelog = ''
+
+[project.scripts]
+
+[tool.setuptools.packages.find]
+exclude = [
+    'tests*',
+    'infer.sh',
+    'infer_sequence.py',
+    'infer_sequence.sh',
+    'inference.py',
+    'medim_infer.py',
+    'sum_result.py',
+    'train.sh',
+    'train.py',
+    'utils',
+    'val.sh',
+    'validation.py',
+    'paper',
+    'scripts',
+    'assets',
+]

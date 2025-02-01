@@ -13,7 +13,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import torchio as tio
 from torch.utils.data.distributed import DistributedSampler
-from segment_anything.build_sam3D import sam_model_registry3D
+from segment_anything_3d.build_sam3D import sam_model_registry3D
 import argparse
 from torch.cuda import amp
 import torch.multiprocessing as mp

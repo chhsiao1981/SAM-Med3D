@@ -25,9 +25,9 @@ import torchio as tio
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from segment_anything import sam_model_registry
-from segment_anything.build_sam3D import sam_model_registry3D
-from segment_anything.utils.transforms3D import ResizeLongestSide3D
+from segment_anything_3d import sam_model_registry
+from segment_anything_3d.build_sam3D import sam_model_registry3D
+from segment_anything_3d.utils.transforms3D import ResizeLongestSide3D
 from utils.click_method import (
     get_next_click3D_torch_no_gt_naive,
     get_next_click3D_torch_no_gt,
